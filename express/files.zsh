@@ -6,8 +6,8 @@ cd $1
 printf "\nDirectory $color_green'$1'\e[0m is created successfully\n"
 
 # ! Creating file system
-mkdir .vscode src src/controllers src/models src/routers
-touch .env .gitignore nodemon.json rome.json src/app.ts
+mkdir .vscode src src/controllers src/models src/routers src/utils
+touch .env .gitignore nodemon.json rome.json src/app.ts src/utils/envConfig.ts
 
 echo '{
   "extensions": [
@@ -270,7 +270,7 @@ export {
 
 echo 'export * from "./productController";' > src/controllers/index.ts
 
-echo 'import { Router } from "express";
+echo 'import express ,{ Router } from "express";
 import {
 	getProducts,
 	getProduct,
@@ -281,6 +281,7 @@ import {
 } from "../controllers";
 
 const productRoute = Router();
+productRoute.use(express.json());
 
 productRoute.get("/", getProducts);
 
@@ -299,19 +300,29 @@ export default productRoute;
 
 echo 'export { default as productRoute } from "./productRoute";' > src/routers/index.ts
 
-echo 'import express from "express";
-import dotenv from "dotenv";
-import { productRoute } from "./routers";
+echo 'import dotenv from "dotenv";
 
 dotenv.config();
+
+const config = {
+  port: process.env.PROD_PORT || process.env.DEV_PORT,
+}
+
+export default config;
+' >> src/utils/envConfig.ts
+
+echo 'import express from "express";
+import config from "./utils/envConfig";
+
+import { productRoute } from "./routers";
+
 const app = express();
-require("dotenv").config();
 
 app.use("/api", productRoute);
 
 const PORT = process.env.PROD_PORT || process.env.DEV_PORT;
 
 app.listen(PORT, () => {
-	console.log(`Server listen on port ${PORT}...`);
+	console.log(`Server listen on port ${config.port}...`);
 });
 ' >> src/app.ts
