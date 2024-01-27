@@ -23,8 +23,8 @@ fi
 
 # if Project name is new and has a name
 mkdir $1
-$directoryPath/packageJSON.zsh $1
-$directoryPath/files.zsh $1
+$directoryPath/packageJSON.sh $1
+$directoryPath/files.sh $1
 
 printf "\n"$color_green"Project express $color_yellow'$1'$color_green is created successfully\e[0m"
 
