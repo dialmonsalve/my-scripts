@@ -5,6 +5,15 @@ color_green="\e[0;32m"
 cd $1
 printf "\nDirectory $color_green'$1'\e[0m is created successfully\n"
 
+echo "Name of the controller: "
+
+read variable
+controller=$(tr '[:upper:]' '[:lower:]' <<< "$variable")
+
+if [[ -z $controller ]]; then
+  controller=$1
+fi
+
 # ! Creating file system
 mkdir .vscode src src/controllers src/models src/routers src/utils
 touch .env .gitignore nodemon.json rome.json src/app.ts src/utils/envConfig.ts
@@ -12,7 +21,7 @@ touch .env .gitignore nodemon.json rome.json src/app.ts src/utils/envConfig.ts
 echo '{
   "extensions": [
     {
-      "name": "Rome",
+      "name": "rome.rome",
       "description": "Rome unifies your development stack by combining the functionality of separate tools. It uses a single configuration file, has fantastic performance, and works with any stack.",
       "version": "0.28.0",
       "category": "Linters",
@@ -178,13 +187,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-' >> .gitignore
+' > .gitignore
 
 echo '{
   "watch": ["src"],
   "ext": ".ts,.js",
-  "ignore": [],
-  "exec": "npx ts-node ./src/app.ts"
+  "ignore": ["src/**/*.spec.ts"],
+  "exec": "tsx watch ./src/app.ts"
 }
 ' >> nodemon.json
 
@@ -196,20 +205,28 @@ echo '{
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "correctness":{
+        "noUnusedVariables":"warn"
+      }
     }
   },
   "formatter" : {
     "enabled": true
+  },
+  "javascript":{
+    "formatter":{
+      "quoteStyle": "single"
+    }
   }
 }
-' >> rome.json
+' > rome.json
 
-npx tsc --init --outDir dist/ --rootDir src
+npx tsc --init --outDir dist/ --rootDir src --target "ES2022" --module "ES2020" --moduleResolution "Node10" --esModuleInterop true --forceConsistentCasingInFileNames true
 
 echo 'import { type Request, type Response } from "express";
 
-const getProduct = (req: Request, res: Response) => {
+const getAll = (req: Request, res: Response) => {
 	const { method } = req;
 
 	return res
@@ -217,7 +234,7 @@ const getProduct = (req: Request, res: Response) => {
 		.json({ "Status code": 501, Message: `Method ${method} not implemented` });
 };
 
-const getProducts = (req: Request, res: Response) => {
+const get'$controller'ById = (req: Request, res: Response) => {
 	const { method } = req;
 
 	return res
@@ -225,7 +242,7 @@ const getProducts = (req: Request, res: Response) => {
 		.json({ "Status code": 501, Message: `Method ${method} not implemented` });
 };
 
-const createProduct = (req: Request, res: Response) => {
+const create = (req: Request, res: Response) => {
 	const { method } = req;
 
 	return res
@@ -233,7 +250,7 @@ const createProduct = (req: Request, res: Response) => {
 		.json({ "Status code": 501, Message: `Method ${method} not implemented` });
 };
 
-const updatePutProduct = (req: Request, res: Response) => {
+const update = (req: Request, res: Response) => {
 	const { method } = req;
 
 	return res
@@ -241,7 +258,7 @@ const updatePutProduct = (req: Request, res: Response) => {
 		.json({ "Status code": 501, Message: `Method ${method} not implemented` });
 };
 
-const updatePatchProduct = (req: Request, res: Response) => {
+const remove = (req: Request, res: Response) => {
 	const { method } = req;
 
 	return res
@@ -249,56 +266,53 @@ const updatePatchProduct = (req: Request, res: Response) => {
 		.json({ "Status code": 501, Message: `Method ${method} not implemented` });
 };
 
-const deleteProduct = (req: Request, res: Response) => {
-	const { method } = req;
-
-	return res
-		.status(501)
-		.json({ "Status code": 501, Message: `Method ${method} not implemented` });
+export default {
+	getAll,
+  get'$controller'ById,
+	create,
+	update,
+	remove,
 };
 
-export {
-	createProduct,
-	deleteProduct,
-	getProduct,
-	getProducts,
-	updatePatchProduct,
-	updatePutProduct,
-};
+' > src/controllers/"$controller"Controller.ts
 
-' > src/controllers/productController.ts
+echo 'export { default as '$controller'Route } from "./'$controller'Route";' > src/routers/index.ts
 
-echo 'export * from "./productController";' > src/controllers/index.ts
+echo 'import { type Request, type Response } from "express";
+
+const error404= (req:Request, res: Response)=>{
+
+  return res.status(404).render("error", {
+    title:"Error 404 Not found",
+    message: "¡Oops! the resource does not exist"
+  })
+}
+
+export default {
+  error404
+}' >  src/controllers/errorsController.ts
 
 echo 'import express ,{ Router } from "express";
-import {
-	getProducts,
-	getProduct,
-	createProduct,
-	deleteProduct,
-	updatePatchProduct,
-	updatePutProduct,
-} from "../controllers";
+import '$controller' from "../controllers/'$controller'Controller";
+import errors from "../controllers/errorsController";
 
-const productRoute = Router();
-productRoute.use(express.json());
+const '$controller'Route = Router();
+'$controller'Route.use(express.json());
 
-productRoute.get("/", getProducts);
+'$controller'Route.get("/", '$controller'.getAll);
 
-productRoute.get("/id", getProduct);
+'$controller'Route.get("/id", '$controller'.get'$controller'ById);
 
-productRoute.post("/", createProduct);
+'$controller'Route.post("/", '$controller'.create);
 
-productRoute.put("/:id", updatePutProduct);
+'$controller'Route.put("/:id", '$controller'.update);
 
-productRoute.patch("/:id", updatePatchProduct);
+'$controller'Route.delete("/:id", '$controller'.remove);
 
-productRoute.delete("/:id", deleteProduct);
+'$controller'Route.use(errors.error404);
 
-export default productRoute;
-' >> src/routers/productRoute.ts
-
-echo 'export { default as productRoute } from "./productRoute";' > src/routers/index.ts
+export default '$controller'Route;
+' > src/routers/"$controller"Route.ts
 
 echo 'import dotenv from "dotenv";
 
@@ -309,20 +323,29 @@ const config = {
 }
 
 export default config;
-' >> src/utils/envConfig.ts
+' > src/utils/envConfig.ts
 
 echo 'import express from "express";
 import config from "./utils/envConfig";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
 
-import { productRoute } from "./routers";
+import { '$controller'Route } from "./routers";
 
 const app = express();
 
-app.use("/api", productRoute);
+app.use(cors());
+app.use(helmet());
+app.use(morgan("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use("/api", '$controller'Route);
 
 const PORT = process.env.PROD_PORT || process.env.DEV_PORT;
 
 app.listen(PORT, () => {
 	console.log(`Server listen on port ${config.port}...`);
 });
-' >> src/app.ts
+' > src/app.ts
